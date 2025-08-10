@@ -7,6 +7,9 @@ const userSchema = new Schema({
     required: true,
     unique: true,
     trim: true,
+    lowercase: true,
+     minLength: [6, "Email must be at least 6 characters long"],
+    maxLength: [50, "Email must be at most 50 characters long"],
   },
   pasword: {
     type: String,
@@ -28,8 +31,6 @@ userSchema.methods.generateAuthToken = () => {
   return token;
 };
 
-
-const User = model("User", userSchema);
-
+const User = model("user", userSchema);
 
 export default User;
