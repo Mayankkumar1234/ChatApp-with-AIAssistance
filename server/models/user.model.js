@@ -26,7 +26,7 @@ userSchema.methods.isValid = (password) => {
 };
 userSchema.methods.generateAuthToken = () => {
   const token = bcrypt.sign({ email: this.email }, process.env.JWT_SECRET, {
-    expiresIn: "1h",
+    expiresIn: "24h",
   });
   return token;
 };

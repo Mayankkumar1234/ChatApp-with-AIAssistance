@@ -1,6 +1,7 @@
 import createUser from "../service/user.service.js";
 import User from "../models/user.model.js";
 import { validationResult } from "express-validator";
+import * as redisClient from "../service/redis.service.js";
 
 const userController = {
   registerController: async (req, res) => {
@@ -35,7 +36,7 @@ const userController = {
           .json({ error: "Email and password are required" })
           .select("+password");
       }
-      const user = await User.findOne({ email: email });
+      const user = await User.findOne({ email: email }).select("+password");
 
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -57,9 +58,34 @@ const userController = {
     }
   },
 
-userProfile :(req, res)=>{
-  console.log(req.user);
-}
+  userProfile: (req, res) => {
+    console.log(req.user);
+    return res.status(200).json({
+      status: true,
+      message: "User profile fetched successfully",
+      user: req.user,
+    });
+  },
+  logoutHandler: async (req, res) => {
+    const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+
+    try {
+      await redisClient.set(token, "logout", "EX", 60 * 60 * 24); // Set token in Redis with 24 hours expiration
+      res.clearCookie("token");
+
+      return res.status(200).json({
+        status: true,
+        message: "Logout successful",
+      });
+    } catch (error) {
+      console.log(error.message);
+      return res.json({
+        status: false,
+        message: "Unable to logout , User please try again",
+        error: error.message,
+      });
+    }
+  },
 };
 
 export default userController;

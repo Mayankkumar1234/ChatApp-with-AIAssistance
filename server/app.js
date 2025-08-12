@@ -4,7 +4,8 @@ import cors from "cors";
 import connectDB from "./Cofig/db.js";
 import "dotenv/config";
 import morgan from "morgan";
-import router from "../server/route/user.route.js";
+import router from "./routes/user.route.js";
+import cookieParser from "cookie-parser";
 
 // Connect to the database
 connectDB();
@@ -13,6 +14,10 @@ const app = express();
 
 // Middleware for logging requests
 app.use(morgan("dev"));
+
+// Cookie parser
+
+app.use(cookieParser());
 
 // Middleware setup
 app.use(cors());
