@@ -8,11 +8,11 @@ const userController = {
     const { email, password } = req.body;
 
     const errors = validationResult(req);
-    if (errors.isEmpty()) {
+    if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
     try {
-      const user = createUser({ email, password });
+      const user = await createUser({ email, password });
       await user.save();
 
       return res
@@ -20,22 +20,23 @@ const userController = {
         .json({ message: "User created successfully", user });
     } catch (error) {
       console.log(error.message);
-      res
-        .status(500)
-        .json({ error: "Internal server error", error: error.message });
+      res.status(400).json({ error: error.message });
     }
   },
   loginController: async (req, res) => {
     console.log(req.body);
     const { email, password } = req.body;
-
+     
     try {
-      if (!email || !password) {
-        return res
-          .status(400)
-          .json({ error: "Email and password are required" })
-          .select("+password");
-      }
+       
+    const errors = validationResult(req);
+
+       if(errors.isEmpty()){
+        return res.status(400).json({
+          error: errors.array()
+        })
+       }
+       
       const user = await User.findOne({ email: email }).select("+password");
 
       if (!user) {
@@ -43,7 +44,7 @@ const userController = {
       }
 
       console.log(user);
-      const isValidPasword = await User.isValidPasword(user.password);
+      const isValidPasword = await User.isValidPasword(user.pasword);
 
       if (!isValidPasword) {
         return res.status(401).json({ error: "Invalid password" });
@@ -67,8 +68,6 @@ const userController = {
     });
   },
   logoutHandler: async (req, res) => {
-    const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
-
     try {
       await redisClient.set(token, "logout", "EX", 60 * 60 * 24); // Set token in Redis with 24 hours expiration
       res.clearCookie("token");
